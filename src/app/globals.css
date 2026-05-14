@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Fractional Design — Theme Tokens
+   Mirrors the v40 design system: light cream/orange (default)
+   and dark warm-graphite mode (toggled via .theme-dark on <html>).
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --bg: #f7f1e8;
+  --bg-2: #f2ebe0;
+  --bg-3: #ede4d6;
+
+  /* Text */
+  --txt: #1a1714;
+  --txt-2: #6b6058;
+  --txt-3: #a89890;
+
+  /* Accent (terracotta) */
+  --acc: #c8512a;
+  --acc-h: #d85e37;
+  --acc-d: #b8451e;
+  --acc-2: #e8c4b0;
+  --acc-3: #fbf0eb;
+
+  /* Borders */
+  --bdr: #e4dccc;
+  --bdr-2: #d8cdb8;
+
+  /* Dark surfaces (used by hero even in light mode) */
+  --dark: #1a1714;
+  --dark-2: #221e18;
+  --dark-3: #2d2823;
+
+  /* Hero cream tones (for text on dark hero) */
+  --hero-cream: #f0eae2;
+  --hero-cream-2: #d4c9bc;
+  --hero-dim: #8b7e72;
+
+  /* Misc */
+  --dot: rgba(200, 81, 42, 0.14);
+  --nav-bg: rgba(247, 241, 232, 0.92);
 }
 
+/* Dark mode — flips surfaces, text, borders. Hero dark tones stay the same. */
+html.theme-dark {
+  --bg: #15110d;
+  --bg-2: #1f1b16;
+  --bg-3: #2a251e;
+  --txt: #f0eae2;
+  --txt-2: #b8aea0;
+  --txt-3: #786e60;
+  --bdr: rgba(232, 196, 176, 0.13);
+  --bdr-2: rgba(232, 196, 176, 0.22);
+  --nav-bg: rgba(21, 17, 13, 0.92);
+}
+
+/* Map CSS vars into Tailwind's theme so utilities like bg-bg, text-txt work. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-txt: var(--txt);
+  --color-txt-2: var(--txt-2);
+  --color-txt-3: var(--txt-3);
+  --color-acc: var(--acc);
+  --color-acc-h: var(--acc-h);
+  --color-acc-d: var(--acc-d);
+  --color-acc-2: var(--acc-2);
+  --color-acc-3: var(--acc-3);
+  --color-bdr: var(--bdr);
+  --color-bdr-2: var(--bdr-2);
+  --color-dark: var(--dark);
+  --color-dark-2: var(--dark-2);
+  --color-dark-3: var(--dark-3);
+  --color-hero-cream: var(--hero-cream);
+  --color-hero-cream-2: var(--hero-cream-2);
+  --color-hero-dim: var(--hero-dim);
+
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--txt);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }

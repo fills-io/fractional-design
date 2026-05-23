@@ -35,7 +35,7 @@ export default function Footer() {
               <rect x="15" y="15" width="11" height="11" rx="1" fill="currentColor" className="text-txt" />
             </svg>
             <span className="font-medium tracking-tight text-txt">
-              fractional<b className="font-medium text-acc">.design</b>
+              Fills<b className="font-medium text-acc">.io</b>
             </span>
           </div>
           <p className="mt-5 max-w-xs text-[13px] leading-[1.7] text-txt-2">
@@ -65,7 +65,7 @@ export default function Footer() {
       </div>
 
       <div className="mx-auto mt-16 flex max-w-6xl flex-col items-center justify-between gap-4 border-t border-bdr pt-6 text-[11.5px] text-txt-3 md:flex-row">
-        <span>© 2026 Fractional Design Ltd. All rights reserved.</span>
+        <span>© 2026 Fills Ltd. All rights reserved.</span>
         <div className="flex gap-6">
           <a href="#" className="transition hover:text-acc">Privacy</a>
           <a href="#" className="transition hover:text-acc">Terms</a>

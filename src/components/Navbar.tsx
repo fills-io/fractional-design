@@ -26,7 +26,7 @@ export default function Navbar() {
           </svg>
         </span>
         <span className="text-sm font-medium tracking-tight text-txt">
-          Fractional<b className="font-medium text-acc">.</b>design
+          Fills<b className="font-medium text-acc">.io</b>
         </span>
       </Link>
 

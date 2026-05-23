@@ -88,7 +88,7 @@ export default function HowItWorks() {
             <span className="text-acc">five minutes</span>.
           </>
         }
-        lead="Fractional follows how senior studios actually scope a project. You give a starting direction. We build out the rest. You stay in control of the result."
+        lead="Fills follows how senior studios actually scope a project. You give a starting direction. We build out the rest. You stay in control of the result."
       />
 
       <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">

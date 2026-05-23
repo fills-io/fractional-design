@@ -96,7 +96,7 @@ export default function Output() {
             <span className="text-acc">anyone with walls</span>.
           </>
         }
-        lead="Fractional is a mood board generator for interior design and architecture, designed by a working architect and trained on how senior studios brief clients. Describe your project, and in five minutes you get a complete editorial brief: palette, materials, lighting, furniture, spatial notes."
+        lead="Fills is a mood board generator for interior design and architecture, designed by a working architect and trained on how senior studios brief clients. Describe your project, and in five minutes you get a complete editorial brief: palette, materials, lighting, furniture, spatial notes."
       />
 
       <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-px bg-bdr md:grid-cols-3 lg:grid-cols-5">

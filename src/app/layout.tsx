@@ -25,7 +25,7 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fractional.design · Interior · Architecture · AI",
+  title: "Fills · Interior · Architecture · AI",
   description:
     "Where interior design, architecture, and AI converge. Generate a complete editorial mood board — palette, materials, lighting, furniture — in five minutes.",
 };

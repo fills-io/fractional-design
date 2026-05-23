@@ -1,0 +1,240 @@
+"use client";
+
+/**
+ * Step 9 — Review.
+ *
+ * A read-only summary of everything the user has picked across the previous
+ * eight steps. Each section has an "Edit" link that jumps the wizard back
+ * to that step.
+ *
+ * The big primary CTA on this page lives on the parent (WizardClient)'s nav
+ * bar — when the user is on the review step, "Next →" is replaced with
+ * "Generate brief →" and the AI generation pipeline takes over (in a later
+ * PR). For now that CTA is wired up but disabled.
+ */
+
+import { getIndustry } from "@/lib/space-taxonomy";
+import type { WizardState } from "@/lib/wizard-state";
+import type { WizardStepId } from "@/lib/wizard-steps";
+import type { ColorEntry, PinterestPin } from "@/db/schema";
+
+type Props = {
+  state: WizardState;
+  /** Jump back to a specific step (rendered as "Edit" links in each section). */
+  goToStep: (id: WizardStepId) => void;
+};
+
+export default function ReviewStep({ state, goToStep }: Props) {
+  const industry = state.industryId ? getIndustry(state.industryId) : null;
+  const spaceLabel =
+    industry?.spaces.find((s) => s.id === state.spaceId)?.label ?? null;
+
+  return (
+    <div className="space-y-8">
+      <p className="text-[14px] text-hero-cream-2">
+        One last look. If anything is off, jump back to that step and adjust —
+        nothing is locked in until you generate the brief.
+      </p>
+
+      {/* Space */}
+      <ReviewSection
+        label="Space"
+        onEdit={() => goToStep("space")}
+        isEmpty={!industry || !spaceLabel}
+      >
+        {industry && spaceLabel ? (
+          <p className="text-[15px] text-hero-cream">
+            <span className="text-acc">{spaceLabel}</span>
+            <span className="text-hero-dim"> · {industry.label}</span>
+            {state.spaceSize && (
+              <>
+                <span className="text-hero-dim"> · </span>
+                <span className="text-hero-cream-2">
+                  {sizeLabel(state.spaceSize)}
+                </span>
+              </>
+            )}
+          </p>
+        ) : null}
+        {state.spaceDescription && (
+          <p className="mt-3 text-[13px] leading-relaxed text-hero-cream-2">
+            {state.spaceDescription}
+          </p>
+        )}
+      </ReviewSection>
+
+      {/* Vibe */}
+      <ReviewSection
+        label="Vibe"
+        onEdit={() => goToStep("vibe")}
+        isEmpty={(state.vibePins?.length ?? 0) === 0}
+      >
+        <PinThumbStrip pins={state.vibePins ?? []} />
+      </ReviewSection>
+
+      {/* Colors */}
+      <ReviewSection
+        label="Colors"
+        onEdit={() => goToStep("colors")}
+        isEmpty={!state.palette || state.palette.length === 0}
+      >
+        <ColorSwatchRow palette={state.palette ?? []} />
+      </ReviewSection>
+
+      {/* Furniture */}
+      <ReviewSection
+        label="Furniture"
+        onEdit={() => goToStep("furniture")}
+        isEmpty={(state.furniturePins?.length ?? 0) === 0}
+      >
+        <PinThumbStrip pins={state.furniturePins ?? []} />
+      </ReviewSection>
+
+      {/* Lighting */}
+      <ReviewSection
+        label="Lighting"
+        onEdit={() => goToStep("lighting")}
+        isEmpty={(state.lightingPins?.length ?? 0) === 0}
+      >
+        <PinThumbStrip pins={state.lightingPins ?? []} />
+      </ReviewSection>
+
+      {/* Flooring */}
+      <ReviewSection
+        label="Flooring"
+        onEdit={() => goToStep("flooring")}
+        isEmpty={(state.flooringPins?.length ?? 0) === 0}
+      >
+        <PinThumbStrip pins={state.flooringPins ?? []} />
+      </ReviewSection>
+
+      {/* Ceiling */}
+      <ReviewSection
+        label="Ceiling"
+        onEdit={() => goToStep("ceiling")}
+        isEmpty={(state.ceilingPins?.length ?? 0) === 0}
+      >
+        <PinThumbStrip pins={state.ceilingPins ?? []} />
+      </ReviewSection>
+
+      {/* Materials */}
+      <ReviewSection
+        label="Materials"
+        onEdit={() => goToStep("materials")}
+        isEmpty={(state.materialsPins?.length ?? 0) === 0}
+      >
+        <PinThumbStrip pins={state.materialsPins ?? []} />
+      </ReviewSection>
+
+      {/* "Generate" disabled-note */}
+      <div className="border border-dark-3 bg-[rgba(34,30,24,0.6)] p-6 backdrop-blur-sm">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
+          Next up
+        </p>
+        <p className="mt-3 text-[14px] leading-relaxed text-hero-cream-2">
+          When the AI integration lands, hitting{" "}
+          <span className="text-acc">Generate brief →</span> here kicks off the
+          Design DNA pipeline — compatibility check, color analysis,
+          psychological + marketing narrative, and the AI-generated mood board
+          imagery. Today the button is wired but disabled.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Sub-components ───────────────────────────────────────────────────── */
+
+function ReviewSection({
+  label,
+  onEdit,
+  isEmpty,
+  children,
+}: {
+  label: string;
+  onEdit: () => void;
+  isEmpty: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-t border-dark-3 pt-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
+          {label}
+        </h2>
+        <button
+          onClick={onEdit}
+          className="font-mono text-[10px] uppercase tracking-[0.14em] text-hero-cream-2 transition hover:text-acc"
+        >
+          Edit →
+        </button>
+      </div>
+      {isEmpty ? (
+        <p className="text-[13px] italic text-hero-dim">
+          Not picked yet — go back and finish this step.
+        </p>
+      ) : (
+        children
+      )}
+    </section>
+  );
+}
+
+function PinThumbStrip({ pins }: { pins: PinterestPin[] }) {
+  if (pins.length === 0) return null;
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+      {pins.map((pin) => (
+        <div
+          key={pin.id}
+          className="aspect-square overflow-hidden border border-dark-3"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={pin.imageUrl}
+            alt={pin.altText || pin.title || "Pin"}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ColorSwatchRow({ palette }: { palette: ColorEntry[] }) {
+  if (palette.length === 0) return null;
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {palette.map((c, i) => (
+        <div key={i} className="flex flex-col">
+          <div
+            className="h-16 w-full border border-dark-3"
+            style={{ backgroundColor: c.hex }}
+          />
+          <div className="mt-2 space-y-0.5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-hero-cream">
+              {c.name || c.hex}
+            </p>
+            {c.material && (
+              <p className="text-[11px] text-hero-dim">{c.material}</p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function sizeLabel(size: NonNullable<WizardState["spaceSize"]>): string {
+  switch (size) {
+    case "small":
+      return "Small";
+    case "medium":
+      return "Medium";
+    case "large":
+      return "Large";
+    case "xl":
+      return "Extra large";
+  }
+}

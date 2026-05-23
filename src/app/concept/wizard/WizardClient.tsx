@@ -37,6 +37,7 @@ import LightingStep from "@/components/wizard/steps/LightingStep";
 import FlooringStep from "@/components/wizard/steps/FlooringStep";
 import CeilingStep from "@/components/wizard/steps/CeilingStep";
 import MaterialsStep from "@/components/wizard/steps/MaterialsStep";
+import ReviewStep from "@/components/wizard/steps/ReviewStep";
 
 export default function WizardClient() {
   const [current, setCurrent] = useState<WizardStepId>("space");
@@ -157,7 +158,7 @@ export default function WizardClient() {
             <MaterialsStep state={wizardState} setState={patchState} />
           )}
           {current === "review" && (
-            <PlaceholderStep stepId={step.id} stepLabel={step.label} />
+            <ReviewStep state={wizardState} goToStep={setCurrent} />
           )}
         </div>
 

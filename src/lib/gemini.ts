@@ -22,16 +22,22 @@ import {
 } from "@google/generative-ai";
 
 export type GeminiModelName =
-  | "gemini-2.0-flash"
-  | "gemini-2.0-flash-exp"
-  | "gemini-1.5-flash"
-  | "gemini-1.5-pro";
+  | "gemini-flash-latest"
+  | "gemini-flash-lite-latest"
+  | "gemini-pro-latest"
+  | "gemini-2.5-flash"
+  | "gemini-2.5-flash-lite"
+  | "gemini-2.5-pro";
 
-// gemini-1.5-flash is on the truly free tier (no billing account required).
-// gemini-2.0-flash requires billing enabled on the project even for free-tier
-// quota, which we want to defer for cost-control. Easy to switch later if
-// we enable billing or want the newer model.
-const DEFAULT_MODEL: GeminiModelName = "gemini-1.5-flash";
+// gemini-flash-latest is an alias that points to the current stable Flash
+// model. Choosing the alias keeps us on the most up-to-date model without
+// requiring a code change every time Google ships a new generation.
+//
+// Model history for this codebase:
+//   - gemini-2.0-flash → 429 on first request (needed billing on the project)
+//   - gemini-1.5-flash → 404 (model retired)
+//   - gemini-flash-latest → current pick (lists as available with our key)
+const DEFAULT_MODEL: GeminiModelName = "gemini-flash-latest";
 
 /**
  * Lazy-init the SDK client. We don't construct at module load so a missing

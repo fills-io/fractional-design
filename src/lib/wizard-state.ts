@@ -29,7 +29,27 @@ export type WizardState = {
   /** Four-slot palette: Primary / Secondary / Accent / Supporting. */
   palette?: ColorEntry[];
 
-  // ── Steps 4–8 (placeholders) ────────────────────────────────────────────
+  // ── Step 4: Furniture ────────────────────────────────────────────────────
+  furnitureQuery?: string;
+  furniturePins?: PinterestPin[];
+
+  // ── Step 5: Lighting ─────────────────────────────────────────────────────
+  lightingQuery?: string;
+  lightingPins?: PinterestPin[];
+
+  // ── Step 6: Flooring ─────────────────────────────────────────────────────
+  flooringQuery?: string;
+  flooringPins?: PinterestPin[];
+
+  // ── Step 7: Ceiling ──────────────────────────────────────────────────────
+  ceilingQuery?: string;
+  ceilingPins?: PinterestPin[];
+
+  // ── Step 8: Materials ────────────────────────────────────────────────────
+  materialsQuery?: string;
+  materialsPins?: PinterestPin[];
+
+  // ── Reserved for future steps ──────────────────────────────────────────
   // We'll add fields as each step ships. Keeping the type open ensures
   // refactors don't cascade through every step component.
 

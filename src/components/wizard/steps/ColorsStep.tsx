@@ -38,6 +38,23 @@ export default function ColorsStep({ state, setState }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Pinterest's Apify scraper returns a dominantColor per pin (when available).
+  // Surface only those vibe pins that came back with a usable hex.
+  const vibePinsWithColors = (state.vibePins ?? [])
+    .map((p) => p.dominantColor?.trim())
+    .filter((c): c is string => !!c && /^#[0-9a-f]{6}$/i.test(c));
+
+  /** Fill unnamed palette slots with dominant colors pulled from vibe pins. */
+  function pullFromVibe() {
+    if (vibePinsWithColors.length === 0) return;
+    const next: ColorEntry[] = palette.map((slot, i) => {
+      if (slot.name.trim()) return slot; // locked by name
+      const pulled = vibePinsWithColors[i];
+      return pulled ? { ...slot, hex: pulled } : slot;
+    });
+    setState({ palette: next });
+  }
+
   async function suggestPalette() {
     setStatus("loading");
     setErrorMessage(null);
@@ -81,17 +98,40 @@ export default function ColorsStep({ state, setState }: Props) {
         designer-to-designer notes, not generic labels.
       </p>
 
-      {/* Suggest-palette CTA */}
-      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          onClick={suggestPalette}
-          disabled={status === "loading"}
-          className="inline-flex items-center gap-2 border border-acc px-5 py-2.5 text-[12px] font-medium uppercase tracking-[0.1em] text-acc transition hover:bg-acc hover:text-white disabled:opacity-50"
-        >
-          {status === "loading" ? "Generating…" : "Suggest a palette →"}
-        </button>
+      {/* Generation buttons */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={suggestPalette}
+            disabled={status === "loading"}
+            className="inline-flex items-center gap-2 border border-acc px-5 py-2.5 text-[12px] font-medium uppercase tracking-[0.1em] text-acc transition hover:bg-acc hover:text-white disabled:opacity-50"
+          >
+            {status === "loading" ? "Generating…" : "Suggest a palette →"}
+          </button>
+
+          {vibePinsWithColors.length > 0 && (
+            <button
+              onClick={pullFromVibe}
+              className="inline-flex items-center gap-2 border border-dark-3 px-5 py-2.5 text-[12px] font-medium uppercase tracking-[0.1em] text-hero-cream-2 transition hover:border-hero-cream-2 hover:text-hero-cream"
+            >
+              <span
+                className="flex h-3 w-3 items-center justify-center gap-px"
+                aria-hidden="true"
+              >
+                {vibePinsWithColors.slice(0, 4).map((c, i) => (
+                  <span
+                    key={i}
+                    className="block h-3 w-[3px]"
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </span>
+              Pull from vibe pins
+            </button>
+          )}
+        </div>
         <p className="text-[11px] text-hero-dim">
-          Replaces unnamed slots. Slots you&apos;ve named are kept as-is.
+          Both buttons replace unnamed slots only. Slots you&apos;ve named stay.
         </p>
       </div>
 

@@ -30,6 +30,7 @@ import {
 } from "@/lib/wizard-state";
 import WizardProgress from "@/components/wizard/WizardProgress";
 import SpaceStep from "@/components/wizard/steps/SpaceStep";
+import VibeStep from "@/components/wizard/steps/VibeStep";
 
 export default function WizardClient() {
   const [current, setCurrent] = useState<WizardStepId>("space");
@@ -70,6 +71,9 @@ export default function WizardClient() {
       case "space":
         // Space step: industry + specific space required, the rest optional.
         return !!(wizardState.industryId && wizardState.spaceId);
+      case "vibe":
+        // Vibe step: at least one pin picked (max 3 enforced by the grid).
+        return (wizardState.vibePins?.length ?? 0) > 0;
       default:
         // Placeholder steps don't gate Next yet — fill this in per step.
         return true;
@@ -108,9 +112,13 @@ export default function WizardClient() {
 
         {/* Step body */}
         <div className="mt-10">
-          {current === "space" ? (
+          {current === "space" && (
             <SpaceStep state={wizardState} setState={patchState} />
-          ) : (
+          )}
+          {current === "vibe" && (
+            <VibeStep state={wizardState} setState={patchState} />
+          )}
+          {current !== "space" && current !== "vibe" && (
             <PlaceholderStep stepId={step.id} stepLabel={step.label} />
           )}
         </div>

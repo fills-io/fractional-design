@@ -27,7 +27,11 @@ export type GeminiModelName =
   | "gemini-1.5-flash"
   | "gemini-1.5-pro";
 
-const DEFAULT_MODEL: GeminiModelName = "gemini-2.0-flash";
+// gemini-1.5-flash is on the truly free tier (no billing account required).
+// gemini-2.0-flash requires billing enabled on the project even for free-tier
+// quota, which we want to defer for cost-control. Easy to switch later if
+// we enable billing or want the newer model.
+const DEFAULT_MODEL: GeminiModelName = "gemini-1.5-flash";
 
 /**
  * Lazy-init the SDK client. We don't construct at module load so a missing

@@ -30,7 +30,7 @@ export async function GET() {
     );
     return NextResponse.json({
       ok: true,
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash",
       reply: reply.trim(),
       latencyMs: Date.now() - startedAt,
     });

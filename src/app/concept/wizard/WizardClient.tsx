@@ -32,6 +32,11 @@ import WizardProgress from "@/components/wizard/WizardProgress";
 import SpaceStep from "@/components/wizard/steps/SpaceStep";
 import VibeStep from "@/components/wizard/steps/VibeStep";
 import ColorsStep from "@/components/wizard/steps/ColorsStep";
+import FurnitureStep from "@/components/wizard/steps/FurnitureStep";
+import LightingStep from "@/components/wizard/steps/LightingStep";
+import FlooringStep from "@/components/wizard/steps/FlooringStep";
+import CeilingStep from "@/components/wizard/steps/CeilingStep";
+import MaterialsStep from "@/components/wizard/steps/MaterialsStep";
 
 export default function WizardClient() {
   const [current, setCurrent] = useState<WizardStepId>("space");
@@ -79,6 +84,16 @@ export default function WizardClient() {
         // Colors step: any non-default-only palette is OK to advance.
         // (We don't require all 4 names filled — that's a stylistic choice.)
         return true;
+      case "furniture":
+        return (wizardState.furniturePins?.length ?? 0) > 0;
+      case "lighting":
+        return (wizardState.lightingPins?.length ?? 0) > 0;
+      case "flooring":
+        return (wizardState.flooringPins?.length ?? 0) > 0;
+      case "ceiling":
+        return (wizardState.ceilingPins?.length ?? 0) > 0;
+      case "materials":
+        return (wizardState.materialsPins?.length ?? 0) > 0;
       default:
         // Placeholder steps don't gate Next yet — fill this in per step.
         return true;
@@ -126,11 +141,24 @@ export default function WizardClient() {
           {current === "colors" && (
             <ColorsStep state={wizardState} setState={patchState} />
           )}
-          {current !== "space" &&
-            current !== "vibe" &&
-            current !== "colors" && (
-              <PlaceholderStep stepId={step.id} stepLabel={step.label} />
-            )}
+          {current === "furniture" && (
+            <FurnitureStep state={wizardState} setState={patchState} />
+          )}
+          {current === "lighting" && (
+            <LightingStep state={wizardState} setState={patchState} />
+          )}
+          {current === "flooring" && (
+            <FlooringStep state={wizardState} setState={patchState} />
+          )}
+          {current === "ceiling" && (
+            <CeilingStep state={wizardState} setState={patchState} />
+          )}
+          {current === "materials" && (
+            <MaterialsStep state={wizardState} setState={patchState} />
+          )}
+          {current === "review" && (
+            <PlaceholderStep stepId={step.id} stepLabel={step.label} />
+          )}
         </div>
 
         {/* Step navigation */}

@@ -31,6 +31,7 @@ import {
 import WizardProgress from "@/components/wizard/WizardProgress";
 import SpaceStep from "@/components/wizard/steps/SpaceStep";
 import VibeStep from "@/components/wizard/steps/VibeStep";
+import ColorsStep from "@/components/wizard/steps/ColorsStep";
 
 export default function WizardClient() {
   const [current, setCurrent] = useState<WizardStepId>("space");
@@ -74,6 +75,10 @@ export default function WizardClient() {
       case "vibe":
         // Vibe step: at least one pin picked (max 3 enforced by the grid).
         return (wizardState.vibePins?.length ?? 0) > 0;
+      case "colors":
+        // Colors step: any non-default-only palette is OK to advance.
+        // (We don't require all 4 names filled — that's a stylistic choice.)
+        return true;
       default:
         // Placeholder steps don't gate Next yet — fill this in per step.
         return true;
@@ -118,9 +123,14 @@ export default function WizardClient() {
           {current === "vibe" && (
             <VibeStep state={wizardState} setState={patchState} />
           )}
-          {current !== "space" && current !== "vibe" && (
-            <PlaceholderStep stepId={step.id} stepLabel={step.label} />
+          {current === "colors" && (
+            <ColorsStep state={wizardState} setState={patchState} />
           )}
+          {current !== "space" &&
+            current !== "vibe" &&
+            current !== "colors" && (
+              <PlaceholderStep stepId={step.id} stepLabel={step.label} />
+            )}
         </div>
 
         {/* Step navigation */}

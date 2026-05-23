@@ -63,9 +63,19 @@ export default function ConceptPageShell() {
         {mode === "upload" && <UploadIntro />}
       </div>
 
-      {/* "Wizard coming soon" note + back link */}
+      {/* Primary CTA into the wizard */}
+      <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Link
+          href={`/concept/wizard?${params.toString()}`}
+          className="inline-flex items-center gap-2 bg-acc px-7 py-3.5 text-sm font-medium text-white transition hover:gap-3 hover:bg-acc-h"
+        >
+          Start the wizard →
+        </Link>
+      </div>
+
+      {/* Footnote + back link */}
       <div className="mt-10 flex flex-col items-start gap-4 border-t border-dark-3 pt-8 font-mono text-[10px] uppercase tracking-[0.14em] text-hero-dim sm:flex-row sm:items-center sm:justify-between">
-        <span>Wizard build in progress · Phase 4</span>
+        <span>Wizard shell · individual steps land over the next PRs</span>
         <Link
           href="/"
           className="text-hero-cream-2 transition hover:text-acc"

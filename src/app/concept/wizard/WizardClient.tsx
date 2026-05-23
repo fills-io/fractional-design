@@ -13,7 +13,7 @@
  * subsequent steps too.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -28,6 +28,7 @@ import {
   type WizardState,
   EMPTY_WIZARD_STATE,
 } from "@/lib/wizard-state";
+import { loadDraft, saveDraft } from "@/lib/wizard-storage";
 import WizardProgress from "@/components/wizard/WizardProgress";
 import SpaceStep from "@/components/wizard/steps/SpaceStep";
 import VibeStep from "@/components/wizard/steps/VibeStep";
@@ -42,24 +43,44 @@ import ReviewStep from "@/components/wizard/steps/ReviewStep";
 export default function WizardClient() {
   const [current, setCurrent] = useState<WizardStepId>("space");
   const [wizardState, setWizardState] = useState<WizardState>(EMPTY_WIZARD_STATE);
+  const [resumedAt, setResumedAt] = useState<Date | null>(null);
+  /** Set after the initial hydration so we don't overwrite localStorage with
+   *  the empty default state before we've had a chance to read from it. */
+  const hydrated = useRef(false);
 
   const params = useSearchParams();
   const mode = params.get("mode") ?? "studio";
 
-  // Seed industry from the homepage Quick form (if it sent one through).
-  // Runs once — subsequent renders won't clobber a user-selected industry.
+  // ── Hydrate on mount ───────────────────────────────────────────────────
+  // Priority order:
+  //   1. Saved localStorage draft (if any) — restores in-progress work
+  //   2. URL ?industry= seed from the homepage Quick form
+  //   3. Empty state
   useEffect(() => {
-    const industryParam = params.get("industry");
-    if (industryParam) {
-      const matched = findIndustryByLabel(industryParam);
-      if (matched) {
-        setWizardState((prev) =>
-          prev.industryId ? prev : { ...prev, industryId: matched.id },
-        );
+    const saved = loadDraft();
+    if (saved) {
+      setWizardState(saved.state);
+      setResumedAt(saved.savedAt);
+    } else {
+      const industryParam = params.get("industry");
+      if (industryParam) {
+        const matched = findIndustryByLabel(industryParam);
+        if (matched) {
+          setWizardState((prev) => ({ ...prev, industryId: matched.id }));
+        }
       }
     }
+    hydrated.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Persist to localStorage whenever wizardState changes ───────────────
+  // Only runs after hydration, otherwise the initial EMPTY_WIZARD_STATE
+  // render would clobber any saved draft before we read it.
+  useEffect(() => {
+    if (!hydrated.current) return;
+    saveDraft(wizardState);
+  }, [wizardState]);
 
   const step = WIZARD_STEPS.find((s) => s.id === current)!;
   const idx = stepNumber(current);
@@ -117,6 +138,20 @@ export default function WizardClient() {
       <WizardProgress current={current} />
 
       <main className="mx-auto max-w-4xl px-8 py-12 sm:py-16">
+        {/* Resumed-draft banner */}
+        {resumedAt && (
+          <div className="mb-8 flex items-start gap-3 border border-acc/30 bg-[rgba(200,81,42,0.06)] p-4 text-[13px]">
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-acc">
+              Resumed
+            </span>
+            <p className="flex-1 text-hero-cream-2">
+              Picked up your in-progress brief from{" "}
+              {formatRelative(resumedAt)}. Your work is saved automatically as
+              you go.
+            </p>
+          </div>
+        )}
+
         {/* Step heading */}
         <div className="mb-3 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
           <span className="inline-block h-px w-6 bg-acc" />
@@ -198,6 +233,20 @@ export default function WizardClient() {
 }
 
 /* ─── Sub-components ───────────────────────────────────────────────────── */
+
+/** Compact "5 min ago" / "2 hours ago" / "yesterday" style. */
+function formatRelative(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  return date.toLocaleDateString();
+}
 
 function PlaceholderStep({
   stepId,

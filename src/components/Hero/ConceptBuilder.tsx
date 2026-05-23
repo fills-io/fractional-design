@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Tab = "quick" | "studio" | "upload";
 
@@ -14,6 +15,7 @@ const INDUSTRIES = [
 ];
 
 export default function ConceptBuilder() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("quick");
   const [industry, setIndustry] = useState<string | null>(null);
   const [industryOpen, setIndustryOpen] = useState(false);
@@ -23,6 +25,31 @@ export default function ConceptBuilder() {
   const filled =
     (industry ? 1 : 0) + (spec.trim() ? 1 : 0) + (vibe.trim() ? 1 : 0);
   const canGenerate = filled === 3;
+
+  /** Build the destination URL based on the current tab + form state. */
+  function handlePrimaryCta() {
+    if (tab === "quick") {
+      // Carry the three picks as query params so /concept can echo them back
+      // and (later) seed the wizard.
+      const qs = new URLSearchParams({
+        mode: "quick",
+        industry: industry ?? "",
+        spec: spec.trim(),
+        vibe: vibe.trim(),
+      });
+      router.push(`/concept?${qs.toString()}`);
+      return;
+    }
+    if (tab === "studio") {
+      router.push("/concept?mode=studio");
+      return;
+    }
+    if (tab === "upload") {
+      // The actual file gets re-uploaded on the concept page once Vercel Blob
+      // is wired up. For now we just send the user across with the mode set.
+      router.push("/concept?mode=upload");
+    }
+  }
 
   return (
     <div className="w-full max-w-[680px]">
@@ -102,6 +129,7 @@ export default function ConceptBuilder() {
       {/* CTAs */}
       <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <button
+          onClick={handlePrimaryCta}
           disabled={tab === "quick" && !canGenerate}
           className="inline-flex items-center gap-2 bg-acc px-7 py-3.5 text-sm font-medium text-white transition hover:gap-3 hover:bg-acc-h disabled:cursor-not-allowed disabled:bg-dark-3 disabled:text-hero-dim disabled:opacity-70"
         >

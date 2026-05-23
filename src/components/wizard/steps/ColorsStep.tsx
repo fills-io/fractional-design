@@ -6,10 +6,13 @@
  * Four-slot color palette builder (Primary / Secondary / Accent / Supporting).
  * Each slot is a hex value + a designer name + the material it shows up on.
  *
- * AI suggestion via Colormind (free, no API key) lands in a follow-up PR
- * — for now this is a pure manual builder.
+ * The "Suggest a palette" button hits /api/colors/generate, which proxies
+ * Colormind.io — a free palette-completion service that returns harmonized
+ * hex codes. We pull the first 4 colors and replace any slots whose user-set
+ * name is empty. Slots the user has already named are treated as "locked".
  */
 
+import { useState } from "react";
 import ColorPaletteBuilder, {
   PALETTE_SLOTS,
 } from "@/components/wizard/ColorPaletteBuilder";
@@ -32,6 +35,43 @@ function defaultPalette(): ColorEntry[] {
 
 export default function ColorsStep({ state, setState }: Props) {
   const palette = state.palette ?? defaultPalette();
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  async function suggestPalette() {
+    setStatus("loading");
+    setErrorMessage(null);
+    try {
+      // Lock any slot the user has already named — Colormind will respect it.
+      const locked = palette
+        .map((c) => (c.name.trim() ? c.hex : null))
+        .filter((v): v is string => v !== null);
+      const query = locked.length > 0 ? `?locked=${locked.join(",")}` : "";
+
+      const response = await fetch(`/api/colors/generate${query}`);
+      const data = (await response.json()) as
+        | { palette: string[] }
+        | { ok: false; error: string };
+
+      if ("ok" in data && data.ok === false) {
+        throw new Error(data.error);
+      }
+      if (!("palette" in data)) {
+        throw new Error("Unexpected response from /api/colors/generate");
+      }
+
+      // Replace only the slots whose name is empty — preserve user-named ones.
+      const next: ColorEntry[] = palette.map((slot, i) => {
+        if (slot.name.trim()) return slot; // user-named = locked
+        return { ...slot, hex: data.palette[i] ?? slot.hex };
+      });
+      setState({ palette: next });
+      setStatus("idle");
+    } catch (e) {
+      setStatus("error");
+      setErrorMessage(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -41,14 +81,35 @@ export default function ColorsStep({ state, setState }: Props) {
         designer-to-designer notes, not generic labels.
       </p>
 
+      {/* Suggest-palette CTA */}
+      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <button
+          onClick={suggestPalette}
+          disabled={status === "loading"}
+          className="inline-flex items-center gap-2 border border-acc px-5 py-2.5 text-[12px] font-medium uppercase tracking-[0.1em] text-acc transition hover:bg-acc hover:text-white disabled:opacity-50"
+        >
+          {status === "loading" ? "Generating…" : "Suggest a palette →"}
+        </button>
+        <p className="text-[11px] text-hero-dim">
+          Replaces unnamed slots. Slots you&apos;ve named are kept as-is.
+        </p>
+      </div>
+
+      {status === "error" && (
+        <div className="border border-red-900/40 bg-red-950/30 p-3 text-[12px] text-red-200">
+          Suggestion failed: {errorMessage}
+        </div>
+      )}
+
       <ColorPaletteBuilder
         palette={palette}
         onChange={(next) => setState({ palette: next })}
       />
 
       <p className="text-[11px] text-hero-dim">
-        Tip: leave a name blank if you&apos;re still scouting. You can come
-        back to refine after the AI has suggested complementary tones.
+        Tip: leave a name blank if you&apos;re still scouting — those slots
+        get replaced when you tap &ldquo;Suggest a palette.&rdquo; Name a slot
+        to lock it before generating.
       </p>
     </div>
   );

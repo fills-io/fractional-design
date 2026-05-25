@@ -58,12 +58,23 @@ export const openaiProvider: TextProvider = {
     // This is the killer feature for our wizard — the model literally
     // cannot return invalid JSON, so the UI never breaks on a malformed
     // response.
+    //
+    // Note on temperature: GPT-5 family (gpt-5, gpt-5-mini) only accepts
+    // the default temperature (1). Passing any other value returns 400.
+    // We omit the field when targeting these models, regardless of what
+    // the caller asked for. For older / non-GPT-5 models, we'd honor
+    // opts.temperature. For now all our tiers map to GPT-5 family, so
+    // temperature is never sent.
     const request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
       model,
       messages,
-      temperature: opts.temperature ?? 0.7,
       max_completion_tokens: opts.maxOutputTokens ?? 2048,
     };
+
+    const isGpt5Family = model.startsWith("gpt-5");
+    if (!isGpt5Family && opts.temperature !== undefined) {
+      request.temperature = opts.temperature;
+    }
 
     if (opts.schema) {
       request.response_format = {

@@ -27,8 +27,8 @@ export async function GET() {
     const result = await aiText({
       prompt: "Respond with the single word OK to confirm you received this.",
       tier: "mini",
-      temperature: 0,
-      maxOutputTokens: 8,
+      // GPT-5 family doesn't accept custom temperature; we don't pass one.
+      maxOutputTokens: 16,
     });
 
     return NextResponse.json({

@@ -103,7 +103,7 @@ export default function BriefDisplay({
                     {list.map((pin) => (
                       <li
                         key={pin.id}
-                        className="group relative overflow-hidden border border-bdr"
+                        className="group relative overflow-hidden border border-bdr-2"
                       >
                         <a
                           href={pin.url}
@@ -138,7 +138,7 @@ export default function BriefDisplay({
           {brief.colorSystem.map((c) => (
             <div key={c.role} className="space-y-3">
               <div
-                className="aspect-square border border-bdr"
+                className="aspect-square border border-bdr-2"
                 style={{ backgroundColor: c.hex }}
               />
               <div>

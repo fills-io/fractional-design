@@ -8,7 +8,7 @@
  */
 
 import type { IndustryId } from "./space-taxonomy";
-import type { ColorEntry, PinterestPin } from "@/db/schema";
+import type { ColorEntry, FurnitureSubSection, PinterestPin } from "@/db/schema";
 
 export type WizardState = {
   // ── Step 1: Space ────────────────────────────────────────────────────────
@@ -30,7 +30,12 @@ export type WizardState = {
   palette?: ColorEntry[];
 
   // ── Step 4: Furniture ────────────────────────────────────────────────────
+  /** Three AI-generated sub-sections (e.g. Bed / Nightstands / Wardrobe),
+   *  each with its own search query + pin selection. */
+  furnitureSubSections?: FurnitureSubSection[];
+  /** @deprecated single-grid furniture — kept for older saved drafts only. */
   furnitureQuery?: string;
+  /** @deprecated single-grid furniture — kept for older saved drafts only. */
   furniturePins?: PinterestPin[];
 
   // ── Step 5: Lighting ─────────────────────────────────────────────────────

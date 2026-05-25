@@ -222,6 +222,14 @@ export default function WizardClient() {
       <main className="mx-auto max-w-4xl px-8 py-12 sm:py-16">
         <BriefDisplay
           brief={generatedBrief}
+          pins={{
+            vibe: wizardState.vibePins,
+            furniture: wizardState.furniturePins,
+            lighting: wizardState.lightingPins,
+            flooring: wizardState.flooringPins,
+            ceiling: wizardState.ceilingPins,
+            materials: wizardState.materialsPins,
+          }}
           onRegenerate={generateBrief}
           onStartOver={startOver}
         />

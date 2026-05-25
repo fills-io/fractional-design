@@ -12,12 +12,33 @@
  */
 
 import type { GenerateBriefResponse } from "@/lib/ai/prompts/generate-brief";
+import type { PinterestPin } from "@/db/schema";
+
+/** Pins picked across the wizard, surfaced in the brief as reference imagery. */
+export type BriefPins = {
+  vibe?: PinterestPin[];
+  furniture?: PinterestPin[];
+  lighting?: PinterestPin[];
+  flooring?: PinterestPin[];
+  ceiling?: PinterestPin[];
+  materials?: PinterestPin[];
+};
 
 type Props = {
   brief: GenerateBriefResponse;
+  pins?: BriefPins;
   onRegenerate: () => void;
   onStartOver: () => void;
 };
+
+const PIN_SECTIONS: { key: keyof BriefPins; label: string }[] = [
+  { key: "vibe", label: "Vibe" },
+  { key: "furniture", label: "Furniture" },
+  { key: "lighting", label: "Lighting" },
+  { key: "flooring", label: "Flooring" },
+  { key: "ceiling", label: "Ceiling" },
+  { key: "materials", label: "Materials" },
+];
 
 const ROLE_LABEL: Record<
   GenerateBriefResponse["colorSystem"][number]["role"],
@@ -31,9 +52,13 @@ const ROLE_LABEL: Record<
 
 export default function BriefDisplay({
   brief,
+  pins,
   onRegenerate,
   onStartOver,
 }: Props) {
+  const pinSections = pins
+    ? PIN_SECTIONS.filter(({ key }) => (pins[key]?.length ?? 0) > 0)
+    : [];
   return (
     <article className="space-y-12">
       {/* Concept line — the headline of the whole brief */}
@@ -56,6 +81,53 @@ export default function BriefDisplay({
           ))}
         </div>
       </header>
+
+      {/* Reference imagery — the pins the user picked across the wizard. */}
+      {pinSections.length > 0 && (
+        <section>
+          <h2 className="mb-6 font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
+            Reference imagery
+          </h2>
+          <div className="space-y-6">
+            {pinSections.map(({ key, label }) => {
+              const list = pins?.[key] ?? [];
+              return (
+                <div
+                  key={key}
+                  className="grid grid-cols-[80px_1fr] items-start gap-4 sm:grid-cols-[110px_1fr] sm:gap-6"
+                >
+                  <div className="pt-1 font-mono text-[9px] uppercase tracking-[0.14em] text-hero-dim">
+                    {label}
+                  </div>
+                  <ul className="flex flex-wrap gap-2 sm:gap-3">
+                    {list.map((pin) => (
+                      <li
+                        key={pin.id}
+                        className="group relative overflow-hidden border border-dark-3"
+                      >
+                        <a
+                          href={pin.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={pin.title || pin.altText || "Pinterest pin"}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={pin.imageThumbUrl || pin.imageUrl}
+                            alt={pin.altText || pin.title || "Reference pin"}
+                            loading="lazy"
+                            className="h-20 w-20 object-cover transition group-hover:opacity-80 sm:h-24 sm:w-24"
+                          />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Color system */}
       <section>

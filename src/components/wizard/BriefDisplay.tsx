@@ -103,7 +103,7 @@ export default function BriefDisplay({
                     {list.map((pin) => (
                       <li
                         key={pin.id}
-                        className="group relative overflow-hidden border border-dark-3"
+                        className="group relative overflow-hidden border border-bdr"
                       >
                         <a
                           href={pin.url}
@@ -138,7 +138,7 @@ export default function BriefDisplay({
           {brief.colorSystem.map((c) => (
             <div key={c.role} className="space-y-3">
               <div
-                className="aspect-square border border-dark-3"
+                className="aspect-square border border-bdr"
                 style={{ backgroundColor: c.hex }}
               />
               <div>
@@ -158,11 +158,11 @@ export default function BriefDisplay({
       </section>
 
       {/* Cinematic description — the visual brief */}
-      <section className="border border-dark bg-dark p-8">
+      <section className="border border-bdr bg-bg-2 p-8">
         <h2 className="mb-4 font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
           The space, as it would be photographed
         </h2>
-        <p className="font-serif text-[16px] leading-[1.7] text-hero-cream">
+        <p className="font-serif text-[16px] leading-[1.7] text-txt">
           {brief.cinematicDescription}
         </p>
       </section>
@@ -202,7 +202,7 @@ export default function BriefDisplay({
         <h2 className="mb-4 font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
           Strategic pillars
         </h2>
-        <div className="grid grid-cols-1 gap-px bg-bdr sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-px border border-bdr bg-bdr sm:grid-cols-3">
           {(
             [
               ["psychological", "Psychological"],
@@ -212,12 +212,12 @@ export default function BriefDisplay({
           ).map(([key, label]) => (
             <div
               key={key}
-              className="bg-dark p-6"
+              className="bg-bg-2 p-6"
             >
               <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-acc">
                 {label}
               </div>
-              <p className="mt-3 text-[13px] leading-relaxed text-hero-cream-2">
+              <p className="mt-3 text-[13px] leading-relaxed text-txt-2">
                 {brief.strategicPillars[key]}
               </p>
             </div>

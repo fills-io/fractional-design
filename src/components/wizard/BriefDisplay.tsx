@@ -13,6 +13,7 @@
 
 import type { GenerateBriefResponse } from "@/lib/ai/prompts/generate-brief";
 import type { PinterestPin } from "@/db/schema";
+import ExportPanel from "./ExportPanel";
 
 /** Pins picked across the wizard, surfaced in the brief as reference imagery. */
 export type BriefPins = {
@@ -224,6 +225,9 @@ export default function BriefDisplay({
           ))}
         </div>
       </section>
+
+      {/* Export — PDF download with logo + orientation controls. */}
+      <ExportPanel brief={brief} pins={pins} />
 
       {/* Actions */}
       <footer className="flex flex-col items-center justify-between gap-4 border-t border-bdr-2 pt-8 sm:flex-row">

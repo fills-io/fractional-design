@@ -118,8 +118,15 @@ export default function WizardClient() {
         // Colors step: any non-default-only palette is OK to advance.
         // (We don't require all 4 names filled — that's a stylistic choice.)
         return true;
-      case "furniture":
-        return (wizardState.furniturePins?.length ?? 0) > 0;
+      case "furniture": {
+        const subSections = wizardState.furnitureSubSections ?? [];
+        // Need at least one pin total across all sub-sections.
+        const totalPins = subSections.reduce(
+          (sum, s) => sum + (s.pins?.length ?? 0),
+          0,
+        );
+        return totalPins > 0;
+      }
       case "lighting":
         return (wizardState.lightingPins?.length ?? 0) > 0;
       case "flooring":
@@ -179,8 +186,13 @@ export default function WizardClient() {
           name: c.name || undefined,
           material: c.material || undefined,
         })),
-      furnitureQuery: wizardState.furnitureQuery,
-      furniturePinTitles: titleList(wizardState.furniturePins),
+      furnitureSubSections: (wizardState.furnitureSubSections ?? [])
+        .filter((s) => (s.pins?.length ?? 0) > 0)
+        .map((s) => ({
+          name: s.name,
+          query: s.query,
+          pinTitles: titleList(s.pins),
+        })),
       lightingPinTitles: titleList(wizardState.lightingPins),
       flooringPinTitles: titleList(wizardState.flooringPins),
       ceilingPinTitles: titleList(wizardState.ceilingPins),
@@ -224,7 +236,10 @@ export default function WizardClient() {
           brief={generatedBrief}
           pins={{
             vibe: wizardState.vibePins,
-            furniture: wizardState.furniturePins,
+            // Flatten all furniture sub-section pins into a single reference row.
+            furniture: (wizardState.furnitureSubSections ?? []).flatMap(
+              (s) => s.pins ?? [],
+            ),
             lighting: wizardState.lightingPins,
             flooring: wizardState.flooringPins,
             ceiling: wizardState.ceilingPins,

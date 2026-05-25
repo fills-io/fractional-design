@@ -65,8 +65,11 @@ export function buildGenerateBriefPrompt(input: {
   vibeQuery?: string;
   vibePinTitles?: string[];
   palette?: Array<{ hex: string; name?: string; material?: string }>;
-  furnitureQuery?: string;
-  furniturePinTitles?: string[];
+  furnitureSubSections?: Array<{
+    name: string;
+    query: string;
+    pinTitles: string[];
+  }>;
   lightingPinTitles?: string[];
   flooringPinTitles?: string[];
   ceilingPinTitles?: string[];
@@ -101,8 +104,15 @@ export function buildGenerateBriefPrompt(input: {
     lines.push(`- Palette: ${paletteStr}`);
   }
 
+  if (input.furnitureSubSections && input.furnitureSubSections.length > 0) {
+    lines.push("- Furniture (broken into sub-categories):");
+    for (const sub of input.furnitureSubSections) {
+      const titles = sub.pinTitles.slice(0, 4).join("; ");
+      lines.push(`    • ${sub.name}: ${titles || "(no specific picks)"}`);
+    }
+  }
+
   const pinterestSummaries: Array<[string, string[] | undefined]> = [
-    ["Furniture", input.furniturePinTitles],
     ["Lighting", input.lightingPinTitles],
     ["Flooring", input.flooringPinTitles],
     ["Ceiling", input.ceilingPinTitles],

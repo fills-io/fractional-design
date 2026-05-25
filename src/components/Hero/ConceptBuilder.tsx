@@ -1,18 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import InlineCombobox from "./InlineCombobox";
+import { INDUSTRIES as TAXONOMY, findIndustryByLabel } from "@/lib/space-taxonomy";
+import { getVibesForIndustry } from "@/lib/vibe-taxonomy";
 
 type Tab = "quick" | "studio" | "upload";
 
-const INDUSTRIES = [
-  "Residential",
-  "Hospitality",
-  "Retail",
-  "Workplace",
-  "Wellness",
-  "Restaurant & Bar",
-];
+const INDUSTRIES = TAXONOMY.map((i) => i.label);
 
 export default function ConceptBuilder() {
   const router = useRouter();
@@ -25,6 +21,11 @@ export default function ConceptBuilder() {
   const filled =
     (industry ? 1 : 0) + (spec.trim() ? 1 : 0) + (vibe.trim() ? 1 : 0);
   const canGenerate = filled === 3;
+
+  // Curated suggestion lists, derived from the selected industry.
+  const matchedIndustry = useMemo(() => findIndustryByLabel(industry), [industry]);
+  const specSuggestions = matchedIndustry?.spaces.map((s) => s.label) ?? [];
+  const vibeSuggestions = getVibesForIndustry(matchedIndustry?.id ?? null);
 
   /** Build the destination URL based on the current tab + form state. */
   function handlePrimaryCta() {
@@ -99,8 +100,10 @@ export default function ConceptBuilder() {
             setIndustryOpen={setIndustryOpen}
             spec={spec}
             setSpec={setSpec}
+            specSuggestions={specSuggestions}
             vibe={vibe}
             setVibe={setVibe}
+            vibeSuggestions={vibeSuggestions}
           />
         )}
 
@@ -154,8 +157,10 @@ function QuickPanel({
   setIndustryOpen,
   spec,
   setSpec,
+  specSuggestions,
   vibe,
   setVibe,
+  vibeSuggestions,
 }: {
   industry: string | null;
   setIndustry: (v: string) => void;
@@ -163,8 +168,10 @@ function QuickPanel({
   setIndustryOpen: (v: boolean) => void;
   spec: string;
   setSpec: (v: string) => void;
+  specSuggestions: string[];
   vibe: string;
   setVibe: (v: string) => void;
+  vibeSuggestions: string[];
 }) {
   return (
     <div className="font-serif text-[clamp(20px,2.4vw,26px)] font-normal leading-[1.85] tracking-tight text-hero-dim">
@@ -201,24 +208,28 @@ function QuickPanel({
 
       <span> project — a </span>
 
-      {/* Specifically input */}
-      <input
+      {/* Specifically — curated spaces for the selected industry. */}
+      <InlineCombobox
+        label="Specifically"
         value={spec}
-        onChange={(e) => setSpec(e.target.value)}
+        onChange={setSpec}
+        suggestions={specSuggestions}
         placeholder="specifically…"
         disabled={!industry}
-        className="inline-block w-[180px] border-b border-dashed border-dark-3 bg-transparent text-center font-serif italic text-hero-cream-2 placeholder:text-hero-dim placeholder:opacity-85 focus:border-acc focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        widthClass="w-[200px]"
       />
 
       <span> that feels like </span>
 
-      {/* Vibe input */}
-      <input
+      {/* Vibe — curated vibes for the selected industry. */}
+      <InlineCombobox
+        label="Feels like"
         value={vibe}
-        onChange={(e) => setVibe(e.target.value)}
+        onChange={setVibe}
+        suggestions={vibeSuggestions}
         placeholder="vibe…"
         disabled={!industry || !spec.trim()}
-        className="inline-block w-[160px] border-b border-dashed border-dark-3 bg-transparent text-center font-serif italic text-hero-cream-2 placeholder:text-hero-dim placeholder:opacity-85 focus:border-acc focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+        widthClass="w-[180px]"
       />
 
       <span>.</span>

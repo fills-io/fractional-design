@@ -65,10 +65,14 @@ export const openaiProvider: TextProvider = {
     // the caller asked for. For older / non-GPT-5 models, we'd honor
     // opts.temperature. For now all our tiers map to GPT-5 family, so
     // temperature is never sent.
+    // Default 4096 — generous enough that GPT-5's reasoning-token overhead
+    // plus a reasonable output fits comfortably. Callers expecting very
+    // long outputs (Design DNA narrative) bump higher; callers wanting a
+    // tight cap pass their own maxOutputTokens.
     const request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
       model,
       messages,
-      max_completion_tokens: opts.maxOutputTokens ?? 2048,
+      max_completion_tokens: opts.maxOutputTokens ?? 4096,
     };
 
     const isGpt5Family = model.startsWith("gpt-5");

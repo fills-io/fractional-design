@@ -28,7 +28,10 @@ export async function GET() {
       prompt: "Respond with the single word OK to confirm you received this.",
       tier: "mini",
       // GPT-5 family doesn't accept custom temperature; we don't pass one.
-      maxOutputTokens: 16,
+      // GPT-5 also uses "reasoning tokens" against the same budget as
+      // output — even a one-word reply needs ~500 tokens for the model to
+      // think before emitting "OK". We give generous headroom.
+      maxOutputTokens: 1024,
     });
 
     return NextResponse.json({

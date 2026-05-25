@@ -13,6 +13,7 @@
 
 import { useSearchParams } from "next/navigation";
 import PinterestGrid from "@/components/wizard/PinterestGrid";
+import { getIndustry } from "@/lib/space-taxonomy";
 import type { WizardState } from "@/lib/wizard-state";
 
 type Props = {
@@ -37,6 +38,10 @@ export default function VibeStep({ state, setState }: Props) {
 
   const selected = state.vibePins ?? [];
 
+  // Resolve industry / space labels for the AI suggestion context.
+  const industry = state.industryId ? getIndustry(state.industryId) : null;
+  const spaceLabel = industry?.spaces.find((s) => s.id === state.spaceId)?.label;
+
   return (
     <PinterestGrid
       initialQuery={seededQuery}
@@ -51,6 +56,11 @@ export default function VibeStep({ state, setState }: Props) {
         })
       }
       helperText="Pick three pins that capture the feeling you want. Sharp picks beat broad picks — the AI uses these as the emotional anchor for the whole brief."
+      suggestionContext={{
+        step: "vibe",
+        industry: industry?.label,
+        space: spaceLabel,
+      }}
     />
   );
 }

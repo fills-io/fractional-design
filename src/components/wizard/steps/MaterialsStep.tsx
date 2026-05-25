@@ -27,6 +27,8 @@ export default function MaterialsStep({ state, setState }: Props) {
   return (
     <PinterestStepWrapper
       spaceLabel={spaceLabel}
+      industryLabel={industry?.label}
+      suggestionStep="materials"
       category="materials texture"
       rememberedQuery={state.materialsQuery}
       selectedPins={state.materialsPins ?? []}

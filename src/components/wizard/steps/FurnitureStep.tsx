@@ -29,6 +29,8 @@ export default function FurnitureStep({ state, setState }: Props) {
   return (
     <PinterestStepWrapper
       spaceLabel={spaceLabel}
+      industryLabel={industry?.label}
+      suggestionStep="furniture"
       category="furniture"
       rememberedQuery={state.furnitureQuery}
       selectedPins={state.furniturePins ?? []}

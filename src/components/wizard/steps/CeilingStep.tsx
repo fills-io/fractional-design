@@ -27,6 +27,8 @@ export default function CeilingStep({ state, setState }: Props) {
   return (
     <PinterestStepWrapper
       spaceLabel={spaceLabel}
+      industryLabel={industry?.label}
+      suggestionStep="ceiling"
       category="ceiling treatment"
       rememberedQuery={state.ceilingQuery}
       selectedPins={state.ceilingPins ?? []}

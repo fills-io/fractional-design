@@ -1,21 +1,21 @@
 /**
  * GET /api/ai/health
  *
- * Smoke test for the Gemini wiring. Confirms that:
- *   1. GEMINI_API_KEY is set on the server
- *   2. The server can reach Google's API
- *   3. The model returns a sane response
+ * Smoke test for the AI wiring. Confirms:
+ *   1. The configured TEXT_PROVIDER's API key is set
+ *   2. The provider's API is reachable
+ *   3. The model responds with a sane reply
  *
  * Response:
- *   200 OK   — { ok: true, model: string, reply: string, latencyMs: number }
+ *   200 OK   — { ok: true, provider: string, model: string, reply: string, latencyMs: number }
  *   500 ERR  — { ok: false, error: string }
  *
- * Cheap, but not free — every call burns one tiny Gemini request. Use
- * sparingly (don't put this in a uptime monitor).
+ * Cheap (one tiny call per ping) but not free — don't put this on a
+ * 5-second uptime monitor. For manual verification after deploys.
  */
 
 import { NextResponse } from "next/server";
-import { generateText } from "@/lib/gemini";
+import { aiText } from "@/lib/ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,19 +24,23 @@ export async function GET() {
   const startedAt = Date.now();
 
   try {
-    const reply = await generateText(
-      "Respond with the single word OK to confirm you received this.",
-      { temperature: 0 },
-    );
+    const result = await aiText({
+      prompt: "Respond with the single word OK to confirm you received this.",
+      tier: "mini",
+      temperature: 0,
+      maxOutputTokens: 8,
+    });
+
     return NextResponse.json({
       ok: true,
-      model: "gemini-flash-latest",
-      reply: reply.trim(),
+      provider: result.provider,
+      model: result.model,
+      reply: result.text.trim(),
       latencyMs: Date.now() - startedAt,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("[/api/ai/health] Gemini ping failed:", error);
+    console.error("[/api/ai/health] AI ping failed:", error);
     return NextResponse.json(
       {
         ok: false,

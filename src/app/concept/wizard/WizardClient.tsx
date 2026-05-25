@@ -13,7 +13,7 @@
  * subsequent steps too.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -23,12 +23,13 @@ import {
   nextStep,
   prevStep,
 } from "@/lib/wizard-steps";
-import { findIndustryByLabel } from "@/lib/space-taxonomy";
+import { findIndustryByLabel, getIndustry } from "@/lib/space-taxonomy";
 import {
   type WizardState,
   EMPTY_WIZARD_STATE,
 } from "@/lib/wizard-state";
-import { loadDraft, saveDraft } from "@/lib/wizard-storage";
+import { clearDraft, loadDraft, saveDraft } from "@/lib/wizard-storage";
+import type { GenerateBriefResponse } from "@/lib/ai/prompts/generate-brief";
 import WizardProgress from "@/components/wizard/WizardProgress";
 import SpaceStep from "@/components/wizard/steps/SpaceStep";
 import VibeStep from "@/components/wizard/steps/VibeStep";
@@ -39,6 +40,8 @@ import FlooringStep from "@/components/wizard/steps/FlooringStep";
 import CeilingStep from "@/components/wizard/steps/CeilingStep";
 import MaterialsStep from "@/components/wizard/steps/MaterialsStep";
 import ReviewStep from "@/components/wizard/steps/ReviewStep";
+import BriefDisplay from "@/components/wizard/BriefDisplay";
+import GenerationOverlay from "@/components/wizard/GenerationOverlay";
 
 export default function WizardClient() {
   const [current, setCurrent] = useState<WizardStepId>("space");
@@ -47,6 +50,15 @@ export default function WizardClient() {
   /** Set after the initial hydration so we don't overwrite localStorage with
    *  the empty default state before we've had a chance to read from it. */
   const hydrated = useRef(false);
+
+  // Generation flow state. While generating, we show an overlay; on
+  // success we replace the wizard chrome with the BriefDisplay.
+  const [generationStatus, setGenerationStatus] = useState<
+    "idle" | "generating" | "done" | "error"
+  >("idle");
+  const [generatedBrief, setGeneratedBrief] =
+    useState<GenerateBriefResponse | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const params = useSearchParams();
   const mode = params.get("mode") ?? "studio";
@@ -133,11 +145,114 @@ export default function WizardClient() {
     if (next) setCurrent(next);
   }
 
+  // ── Generation flow ────────────────────────────────────────────────────
+  // Called from Step 9's "Generate brief →" button. Posts a summary of
+  // the wizard state to /api/ai/generate-brief, then either renders the
+  // result or surfaces an error.
+  const generateBrief = useCallback(async () => {
+    setGenerationStatus("generating");
+    setGenerationError(null);
+
+    const industry = wizardState.industryId
+      ? getIndustry(wizardState.industryId)
+      : null;
+    const spaceLabel = industry?.spaces.find(
+      (s) => s.id === wizardState.spaceId,
+    )?.label;
+    const titleList = (pins?: { title?: string }[]) =>
+      (pins ?? [])
+        .map((p) => p.title?.trim())
+        .filter((t): t is string => !!t && t.length > 0)
+        .slice(0, 5);
+
+    const body = {
+      industry: industry?.label,
+      space: spaceLabel,
+      spaceDescription: wizardState.spaceDescription,
+      spaceSize: wizardState.spaceSize,
+      vibeQuery: wizardState.vibeQuery,
+      vibePinTitles: titleList(wizardState.vibePins),
+      palette: wizardState.palette
+        ?.filter((c) => c.name || c.material)
+        .map((c) => ({
+          hex: c.hex,
+          name: c.name || undefined,
+          material: c.material || undefined,
+        })),
+      furnitureQuery: wizardState.furnitureQuery,
+      furniturePinTitles: titleList(wizardState.furniturePins),
+      lightingPinTitles: titleList(wizardState.lightingPins),
+      flooringPinTitles: titleList(wizardState.flooringPins),
+      ceilingPinTitles: titleList(wizardState.ceilingPins),
+      materialsPinTitles: titleList(wizardState.materialsPins),
+    };
+
+    try {
+      const response = await fetch("/api/ai/generate-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error || `HTTP ${response.status}`);
+      }
+      const data = (await response.json()) as GenerateBriefResponse;
+      setGeneratedBrief(data);
+      setGenerationStatus("done");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setGenerationError(message);
+      setGenerationStatus("error");
+    }
+  }, [wizardState]);
+
+  function startOver() {
+    clearDraft();
+    setWizardState(EMPTY_WIZARD_STATE);
+    setGeneratedBrief(null);
+    setGenerationStatus("idle");
+    setGenerationError(null);
+    setCurrent("space");
+  }
+
+  // ── Final brief view (replaces the wizard chrome when done) ──────────
+  if (generationStatus === "done" && generatedBrief) {
+    return (
+      <main className="mx-auto max-w-4xl px-8 py-12 sm:py-16">
+        <BriefDisplay
+          brief={generatedBrief}
+          onRegenerate={generateBrief}
+          onStartOver={startOver}
+        />
+      </main>
+    );
+  }
+
   return (
     <>
       <WizardProgress current={current} />
 
+      {/* Full-screen overlay during generation */}
+      {generationStatus === "generating" && <GenerationOverlay />}
+
       <main className="mx-auto max-w-4xl px-8 py-12 sm:py-16">
+        {/* Generation error banner */}
+        {generationStatus === "error" && generationError && (
+          <div className="mb-8 border border-rose-700/50 bg-rose-950/30 p-5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-rose-300">
+              Generation failed
+            </p>
+            <p className="mt-2 text-[13px] text-hero-cream-2">{generationError}</p>
+            <button
+              onClick={generateBrief}
+              className="mt-3 text-[12px] underline underline-offset-2 text-rose-200 hover:text-rose-100"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {/* Resumed-draft banner */}
         {resumedAt && (
           <div className="mb-8 flex items-start gap-3 border border-acc/30 bg-[rgba(200,81,42,0.06)] p-4 text-[13px]">
@@ -216,8 +331,8 @@ export default function WizardClient() {
           )}
 
           <button
-            onClick={goNext}
-            disabled={isLast || !canAdvance()}
+            onClick={isLast ? generateBrief : goNext}
+            disabled={!canAdvance() || generationStatus === "generating"}
             className="inline-flex items-center gap-2 bg-acc px-7 py-3.5 text-sm font-medium text-white transition hover:gap-3 hover:bg-acc-h disabled:cursor-not-allowed disabled:bg-dark-3 disabled:text-hero-dim disabled:opacity-70"
           >
             {isLast ? "Generate brief →" : "Next →"}

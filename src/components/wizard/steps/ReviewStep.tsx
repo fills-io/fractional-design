@@ -17,6 +17,7 @@ import { getIndustry } from "@/lib/space-taxonomy";
 import type { WizardState } from "@/lib/wizard-state";
 import type { WizardStepId } from "@/lib/wizard-steps";
 import type { ColorEntry, PinterestPin } from "@/db/schema";
+import DesignCheckBanner from "@/components/wizard/DesignCheckBanner";
 
 type Props = {
   state: WizardState;
@@ -35,6 +36,9 @@ export default function ReviewStep({ state, goToStep }: Props) {
         One last look. If anything is off, jump back to that step and adjust —
         nothing is locked in until you generate the brief.
       </p>
+
+      {/* AI design check — coherence reading across all picks */}
+      <DesignCheckBanner state={state} />
 
       {/* Space */}
       <ReviewSection

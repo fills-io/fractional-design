@@ -41,9 +41,12 @@ Required output fields (all must be filled):
 
   colorSystem — exactly 4 entries. role is one of "primary"|"secondary"|"accent"|"supporting".
     - Use the user's palette as the foundation. If they gave you names/materials, keep them.
-    - If a slot is unnamed, give it a designer-evocative name ("travertine", "saddle leather", "linen ghost") and the material it lives on in the room ("wall plaster", "rug pile", "drapery").
+    - If a slot is unnamed, give it a poetic, evocative name — think paint-poet, not paint-catalog. Two to four words. A small image, an hour of day, a remembered material. Examples: "first light on linen", "olive at dusk", "the shadow side of brass", "ash after rain", "cathedral whisper". Avoid bare nouns ("Beige", "Olive") and avoid clichés ("warm white", "soft cream").
+    - Pair each name with the material it actually lives on in the room ("lime-washed plaster wall", "drapery in raw silk", "rug of undyed wool"). The name is the poem, the material is the truth.
 
-  sectionMoodLines — one short sentence per section. Each is its own atmospheric note. Sections: cover, vibe, colors, furniture, lighting, surfaces, materials, pillars.
+  sectionMoodLines — one short sentence per section. Each is a tiny prose-poem — a single image with weight. Concrete (a material, a time of day, a body posture), never abstract ("calming", "inviting"). Aim for the rhythm of a haiku, not a tagline. Sections: cover, vibe, colors, furniture, lighting, surfaces, materials, pillars.
+    Example good (vibe): "Slow as held breath; the room exhales at the same pace you do."
+    Example bad (vibe):  "A warm, calming, inviting atmosphere perfect for relaxation."
 
   strategicPillars — three short paragraphs (~30-60 words each):
     - psychological: what this space does to the people in it

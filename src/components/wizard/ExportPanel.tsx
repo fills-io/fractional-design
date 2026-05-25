@@ -1,0 +1,179 @@
+"use client";
+
+/**
+ * ExportPanel — PDF download controls shown on the generated brief page.
+ *
+ * Lets the user pick orientation (portrait/landscape), optionally upload
+ * a logo to brand the cover page, then download a magazine-style PDF.
+ *
+ * PDF generation is fully client-side via @react-pdf/renderer.pdf().
+ * The blob is materialized and triggered as a browser download — no
+ * server round-trip, no temporary file storage.
+ */
+
+import { useRef, useState } from "react";
+import { pdf } from "@react-pdf/renderer";
+import BriefPDF from "./BriefPDF";
+import type { GenerateBriefResponse } from "@/lib/ai/prompts/generate-brief";
+import type { BriefPins } from "./BriefDisplay";
+
+type Orientation = "portrait" | "landscape";
+
+type Props = {
+  brief: GenerateBriefResponse;
+  pins?: BriefPins;
+};
+
+export default function ExportPanel({ brief, pins }: Props) {
+  const [orientation, setOrientation] = useState<Orientation>("portrait");
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [logoName, setLogoName] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Logo must be an image (PNG, JPG, SVG).");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Logo must be under 2MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoDataUrl(reader.result as string);
+      setLogoName(file.name);
+    };
+    reader.onerror = () => setError("Couldn't read that file. Try another.");
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogo() {
+    setLogoDataUrl(null);
+    setLogoName(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  async function download() {
+    setBusy(true);
+    setError(null);
+    try {
+      const blob = await pdf(
+        <BriefPDF
+          brief={brief}
+          pins={pins}
+          orientation={orientation}
+          logoDataUrl={logoDataUrl}
+        />,
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      const slug = brief.conceptLine
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40);
+      anchor.download = `fills-brief-${slug || "design-dna"}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="border border-bdr bg-bg-2 p-6">
+      <h2 className="mb-5 font-mono text-[10px] uppercase tracking-[0.18em] text-acc">
+        Export as PDF
+      </h2>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        {/* Orientation */}
+        <div>
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em] text-txt-3">
+            Orientation
+          </div>
+          <div className="flex gap-2">
+            {(["portrait", "landscape"] as const).map((o) => (
+              <button
+                key={o}
+                type="button"
+                onClick={() => setOrientation(o)}
+                className={`flex-1 border px-3 py-2 text-[12px] uppercase tracking-[0.1em] transition ${
+                  orientation === o
+                    ? "border-acc bg-acc text-white"
+                    : "border-bdr-2 text-txt-2 hover:border-acc hover:text-acc"
+                }`}
+              >
+                {o}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Logo upload */}
+        <div>
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em] text-txt-3">
+            Logo (optional)
+          </div>
+          {logoDataUrl ? (
+            <div className="flex items-center gap-3 border border-bdr-2 px-3 py-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoDataUrl}
+                alt="Logo preview"
+                className="h-8 w-auto max-w-[80px] object-contain"
+              />
+              <span className="flex-1 truncate text-[12px] text-txt-2">
+                {logoName}
+              </span>
+              <button
+                type="button"
+                onClick={clearLogo}
+                className="font-mono text-[10px] uppercase tracking-[0.1em] text-txt-3 transition hover:text-acc"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label className="flex cursor-pointer items-center justify-center border border-dashed border-bdr-2 px-3 py-2 text-[12px] text-txt-2 transition hover:border-acc hover:text-acc">
+              <span>Choose image</span>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onLogoChange}
+              />
+            </label>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <p className="mt-3 text-[12px] text-rose-600 dark:text-rose-400">{error}</p>
+      )}
+
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          onClick={download}
+          disabled={busy}
+          className="inline-flex items-center gap-2 bg-acc px-6 py-3 text-[12px] font-medium uppercase tracking-[0.1em] text-white transition hover:gap-3 hover:bg-acc-h disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {busy ? "Generating…" : "↓ Download PDF"}
+        </button>
+      </div>
+    </section>
+  );
+}

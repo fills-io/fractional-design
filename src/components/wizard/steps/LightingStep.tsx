@@ -28,6 +28,8 @@ export default function LightingStep({ state, setState }: Props) {
   return (
     <PinterestStepWrapper
       spaceLabel={spaceLabel}
+      industryLabel={industry?.label}
+      suggestionStep="lighting"
       category="lighting"
       rememberedQuery={state.lightingQuery}
       selectedPins={state.lightingPins ?? []}

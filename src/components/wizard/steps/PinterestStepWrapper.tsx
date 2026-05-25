@@ -34,6 +34,15 @@ type Props = {
   helperText: string;
   /** Optional URL search-param key to also consult for the seed query. */
   urlSeedKey?: string;
+  /**
+   * Wizard step ID — passed to the AI suggestion endpoint so it can
+   * tailor proposals (a Lighting search wants very different suggestions
+   * than a Flooring search even with the same query text).
+   * Omit to disable AI suggestions for this step.
+   */
+  suggestionStep?: string;
+  /** Industry label ("Residential" etc.), passed to AI suggestions. */
+  industryLabel?: string;
 };
 
 export default function PinterestStepWrapper({
@@ -46,6 +55,8 @@ export default function PinterestStepWrapper({
   onChange,
   helperText,
   urlSeedKey,
+  suggestionStep,
+  industryLabel,
 }: Props) {
   const params = useSearchParams();
 
@@ -67,6 +78,15 @@ export default function PinterestStepWrapper({
         onChange({ pins, query: seededQuery })
       }
       helperText={helperText}
+      suggestionContext={
+        suggestionStep
+          ? {
+              step: suggestionStep,
+              industry: industryLabel,
+              space: spaceLabel,
+            }
+          : undefined
+      }
     />
   );
 }

@@ -26,6 +26,18 @@
 import { useCallback, useEffect, useState } from "react";
 import type { PinterestPin } from "@/db/schema";
 
+/**
+ * Context the parent passes so the AI suggestion endpoint can tailor
+ * its proposals to the project. Optional — when absent, the suggestion
+ * row simply doesn't appear (zero AI cost, zero UI clutter).
+ */
+export type SuggestionContext = {
+  step: string;
+  industry?: string;
+  space?: string;
+  priorContext?: string;
+};
+
 type Props = {
   /** Pre-filled search text. */
   initialQuery: string;
@@ -37,6 +49,8 @@ type Props = {
   onSelectionChange: (pins: PinterestPin[]) => void;
   /** Optional copy under the search input ("Pick three that capture…"). */
   helperText?: string;
+  /** When provided, AI-suggested alternative searches appear below the bar. */
+  suggestionContext?: SuggestionContext;
 };
 
 export default function PinterestGrid({
@@ -45,12 +59,19 @@ export default function PinterestGrid({
   selectedPins,
   onSelectionChange,
   helperText,
+  suggestionContext,
 }: Props) {
   const [query, setQuery] = useState(initialQuery);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [pins, setPins] = useState<PinterestPin[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+
+  // Suggestion state — only meaningful when suggestionContext is set.
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsStatus, setSuggestionsStatus] = useState<
+    "idle" | "loading" | "error"
+  >("idle");
 
   const fetchPins = useCallback(async (q: string) => {
     setStatus("loading");
@@ -85,6 +106,48 @@ export default function PinterestGrid({
       fetchPins(submittedQuery);
     }
   }, [submittedQuery, fetchPins]);
+
+  // Whenever a new query is submitted, also ask the AI for alternative
+  // search suggestions tailored to the wizard context. Fire-and-forget;
+  // failures hide the suggestion row silently rather than disrupting the
+  // user's actual search.
+  useEffect(() => {
+    if (!suggestionContext || submittedQuery.trim().length === 0) {
+      setSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    setSuggestionsStatus("loading");
+
+    fetch("/api/ai/suggest-search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentQuery: submittedQuery,
+        step: suggestionContext.step,
+        industry: suggestionContext.industry,
+        space: suggestionContext.space,
+        priorContext: suggestionContext.priorContext,
+      }),
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = (await response.json()) as { suggestions?: string[] };
+        if (cancelled) return;
+        setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
+        setSuggestionsStatus("idle");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Don't surface AI errors — suggestions are a bonus, not core flow.
+        setSuggestions([]);
+        setSuggestionsStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [submittedQuery, suggestionContext]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -140,6 +203,33 @@ export default function PinterestGrid({
           <p className="text-[12px] text-hero-dim">{helperText}</p>
         )}
       </form>
+
+      {/* AI-suggested alternative searches */}
+      {suggestionContext && suggestions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-acc">
+            AI · try also
+          </span>
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setQuery(s);
+                setSubmittedQuery(s);
+              }}
+              className="border border-dark-3 px-3 py-1 text-[11px] text-hero-cream-2 transition hover:border-acc hover:text-acc"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+      {suggestionContext && suggestionsStatus === "loading" && (
+        <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-hero-dim">
+          AI · thinking of related searches…
+        </div>
+      )}
 
       {/* Selection counter */}
       <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em]">

@@ -27,6 +27,8 @@ export default function FlooringStep({ state, setState }: Props) {
   return (
     <PinterestStepWrapper
       spaceLabel={spaceLabel}
+      industryLabel={industry?.label}
+      suggestionStep="flooring"
       category="flooring"
       rememberedQuery={state.flooringQuery}
       selectedPins={state.flooringPins ?? []}

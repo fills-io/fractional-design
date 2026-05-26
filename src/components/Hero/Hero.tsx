@@ -15,7 +15,7 @@ export default function Hero() {
 
       {/* Corner ticks — architectural detailing */}
       <span className="absolute left-3.5 top-3.5 font-mono text-[9px] uppercase tracking-[0.1em] text-hero-dim">
-        FRACTIONAL · A-001
+        FILLS · A-001
       </span>
       <span className="absolute right-3.5 top-3.5 font-mono text-[9px] uppercase tracking-[0.1em] text-hero-dim">
         v0.1
